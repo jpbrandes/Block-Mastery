@@ -5,10 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="2048 Endless">
-    <meta name="theme-color" content="#faf8ef">
-    
-    <title>2048 Endless Mode</title>
+    <title>2048 Corrigido</title>
 
     <style>
         :root {
@@ -17,16 +14,14 @@
             --empty-cell: #cdc1b4;
             --text-color: #776e65;
             --arrow-color: #8f7a66;
-            --arrow-idle: #bbada0; /* Cor mais suave para quando parada */
+            --arrow-idle: #bbada0;
         }
 
         * {
-            box-sizing: border-box;
-            margin: 0; padding: 0;
-            user-select: none;
-            -webkit-user-select: none;
+            box-sizing: border-box; margin: 0; padding: 0;
+            user-select: none; -webkit-user-select: none;
             -webkit-tap-highlight-color: transparent;
-            font-family: "Clear Sans", "Helvetica Neue", Arial, sans-serif;
+            font-family: "Clear Sans", Arial, sans-serif;
         }
 
         body {
@@ -38,71 +33,47 @@
             overflow: hidden;
         }
 
-        .header-container {
-            width: 320px; display: flex;
-            justify-content: space-between; align-items: center;
-            margin-bottom: 15px;
-        }
-
-        h1 { font-size: 48px; font-weight: 800; margin: 0; line-height: 1; }
-
-        .score-box {
-            background: #bbada0; padding: 8px 12px;
-            border-radius: 6px; text-align: center;
-            color: white; min-width: 80px;
-        }
-
+        .header-container { width: 320px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        h1 { font-size: 48px; font-weight: 800; }
+        .score-box { background: #bbada0; padding: 8px; border-radius: 6px; text-align: center; color: white; min-width: 80px; }
         .score-label { font-size: 11px; text-transform: uppercase; color: #eee4da; font-weight: bold; }
         .score-value { font-size: 20px; font-weight: bold; display: block; }
 
-        .board-wrapper {
-            position: relative;
-            padding: 40px; 
-            display: flex; justify-content: center; align-items: center;
-        }
+        .board-wrapper { position: relative; padding: 40px; display: flex; justify-content: center; align-items: center; }
 
         #game-board {
-            position: relative;
-            background-color: var(--grid-color);
-            width: 320px; height: 320px;
-            border-radius: 6px; padding: 10px;
+            position: relative; background-color: var(--grid-color);
+            width: 320px; height: 320px; border-radius: 6px; padding: 10px;
             display: grid; grid-template-columns: repeat(4, 1fr);
-            grid-template-rows: repeat(4, 1fr); gap: 10px;
-            touch-action: none; z-index: 5;
+            grid-template-rows: repeat(4, 1fr); gap: 10px; z-index: 5;
         }
 
-        /* --- SETAS REDUZIDAS EM 50% E COM ANIMAÇÃO --- */
+        /* SETAS PEQUENAS (30px) */
         .nav-arrow {
-            position: absolute;
-            font-size: 30px; /* Reduzido de 60px para 30px */
-            color: var(--arrow-idle);
-            z-index: 10;
-            display: flex; justify-content: center; align-items: center;
-            transition: color 0.2s;
+            position: absolute; font-size: 30px; color: var(--arrow-idle);
+            z-index: 10; display: flex; justify-content: center; align-items: center;
         }
-
         .arrow-up    { top: 5px; left: 50%; transform: translateX(-50%); }
         .arrow-down  { bottom: 5px; left: 50%; transform: translateX(-50%); }
         .arrow-left  { left: 5px; top: 50%; transform: translateY(-50%); }
         .arrow-right { right: 5px; top: 50%; transform: translateY(-50%); }
 
-        /* Classes de animação disparadas pelo JavaScript */
-        .active-up    { animation: bounce-up 0.3s ease; color: var(--arrow-color); }
-        .active-down  { animation: bounce-down 0.3s ease; color: var(--arrow-color); }
-        .active-left  { animation: bounce-left 0.3s ease; color: var(--arrow-color); }
-        .active-right { animation: bounce-right 0.3s ease; color: var(--arrow-color); }
+        .active-up    { animation: b-up 0.3s ease; color: var(--arrow-color); }
+        .active-down  { animation: b-down 0.3s ease; color: var(--arrow-color); }
+        .active-left  { animation: b-left 0.3s ease; color: var(--arrow-color); }
+        .active-right { animation: b-right 0.3s ease; color: var(--arrow-color); }
 
-        @keyframes bounce-up { 0%, 100% { top: 5px; } 50% { top: -10px; } }
-        @keyframes bounce-down { 0%, 100% { bottom: 5px; } 50% { bottom: -10px; } }
-        @keyframes bounce-left { 0%, 100% { left: 5px; } 50% { left: -10px; } }
-        @keyframes bounce-right { 0%, 100% { right: 5px; } 50% { right: -10px; } }
+        @keyframes b-up    { 0%, 100% { top: 5px; } 50% { top: -10px; } }
+        @keyframes b-down  { 0%, 100% { bottom: 5px; } 50% { bottom: -10px; } }
+        @keyframes b-left  { 0%, 100% { left: 5px; } 50% { left: -10px; } }
+        @keyframes b-right { 0%, 100% { right: 5px; } 50% { right: -10px; } }
 
-        /* Tiles e Grid */
-        .grid-cell { background-color: var(--empty-cell); border-radius: 3px; }
+        .grid-cell, .tile { border-radius: 3px; }
+        .grid-cell { background-color: var(--empty-cell); }
         .tile {
-            display: flex; justify-content: center; align-items: center;
-            font-weight: bold; border-radius: 3px; font-size: 35px;
-            animation: pop 0.2s ease-in-out;
+            width: 100%; height: 100%; display: flex; justify-content: center;
+            align-items: center; font-weight: bold; font-size: 30px;
+            animation: pop 0.15s ease;
         }
         .t2 { background: #eee4da; color: #776e65; }
         .t4 { background: #ede0c8; color: #776e65; }
@@ -110,36 +81,30 @@
         .t16 { background: #f59563; color: #f9f6f2; }
         .t32 { background: #f67c5f; color: #f9f6f2; }
         .t64 { background: #f65e3b; color: #f9f6f2; }
-        .t128 { background: #edcf72; color: #f9f6f2; font-size: 30px; }
-        .t2048 { background: #edc22e; color: #f9f6f2; font-size: 24px; box-shadow: 0 0 30px 5px rgba(243, 215, 116, 0.4); }
-        .tsuper { background: #3c3a32; color: #f9f6f2; font-size: 20px; }
+        .t128 { background: #edcf72; color: #f9f6f2; font-size: 25px; }
+        .t256 { background: #edcc61; color: #f9f6f2; font-size: 25px; }
+        .t512 { background: #edc850; color: #f9f6f2; font-size: 25px; }
+        .t1024 { background: #edc53f; color: #f9f6f2; font-size: 20px; }
+        .t2048 { background: #edc22e; color: #f9f6f2; font-size: 20px; box-shadow: 0 0 15px rgba(237, 194, 46, 0.5); }
+        .tsuper { background: #3c3a32; color: #f9f6f2; font-size: 18px; }
 
-        @keyframes pop { 0% { transform: scale(0.5); } 100% { transform: scale(1); } }
+        @keyframes pop { 0% { transform: scale(0.8); } 100% { transform: scale(1); } }
 
         .overlay {
-            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(238, 228, 218, 0.85); z-index: 100;
-            display: none; flex-direction: column; align-items: center;
-            justify-content: center; text-align: center; border-radius: 6px;
+            position: absolute; inset: 0; background: rgba(238, 228, 218, 0.8);
+            z-index: 100; display: none; flex-direction: column;
+            align-items: center; justify-content: center; border-radius: 6px;
         }
-
-        .btn { background-color: #8f7a66; color: white; border: none; border-radius: 3px; padding: 12px 20px; font-size: 18px; font-weight: bold; cursor: pointer; margin: 5px; }
-        .btn-restart { margin-top: 20px; width: 320px; }
-
-        @media (min-width: 500px) {
-            .header-container, .btn-restart { width: 450px; }
-            #game-board { width: 450px; height: 450px; }
-            .tile { font-size: 50px; }
-        }
+        .btn { background: #8f7a66; color: white; border: none; border-radius: 3px; padding: 10px 20px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div class="header-container">
         <h1>2048</h1>
-        <div class="scores-container">
-            <div class="score-box"><span class="score-label">Score</span><span id="score" class="score-value">0</span></div>
-            <div class="score-box"><span class="score-label">Best</span><span id="best-score" class="score-value">0</span></div>
+        <div class="score-box">
+            <span class="score-label">Score</span>
+            <span id="score" class="score-value">0</span>
         </div>
     </div>
 
@@ -148,164 +113,126 @@
         <div id="arrow-down" class="nav-arrow arrow-down">▼</div>
         <div id="arrow-left" class="nav-arrow arrow-left">◀</div>
         <div id="arrow-right" class="nav-arrow arrow-right">▶</div>
-
         <div id="game-board"></div>
-
-        <div id="overlay-win" class="overlay">
-            <h2 style="font-size: 40px; color: #776e65;">Você venceu!</h2>
-            <button class="btn" style="background-color: #edc22e;" onclick="continuePlaying()">Continuar</button>
+        <div id="overlay" class="overlay">
+            <h2 id="status-msg" style="margin-bottom: 20px;">Fim de Jogo!</h2>
             <button class="btn" onclick="restartGame()">Novo Jogo</button>
-        </div>
-        <div id="overlay-loss" class="overlay">
-            <h2 style="font-size: 40px; color: #776e65;">Fim de Jogo!</h2>
-            <button class="btn" onclick="restartGame()">Tentar Novamente</button>
         </div>
     </div>
 
-    <button class="btn btn-restart" onclick="restartGame()">Reiniciar Jogo</button>
-
     <script>
-        const rows = 4, columns = 4;
-        let board, score = 0, hasWon2048 = false;
-        let bestScore = parseInt(localStorage.getItem("2048_best")) || 0;
-
-        const boardElement = document.getElementById("game-board");
-        const scoreElement = document.getElementById("score");
-        const bestScoreElement = document.getElementById("best-score");
-        const overlayWin = document.getElementById("overlay-win");
-        const overlayLoss = document.getElementById("overlay-loss");
-
-        window.onload = () => {
-            bestScoreElement.innerText = bestScore;
-            restartGame();
-        };
+        let board, score = 0;
+        const boardEl = document.getElementById("game-board");
 
         function restartGame() {
-            board = Array(4).fill().map(() => Array(4).fill(0));
-            score = 0; hasWon2048 = false;
-            overlayWin.style.display = "none";
-            overlayLoss.style.display = "none";
-            spawnTile(); spawnTile();
-            updateView();
+            board = Array(16).fill(0);
+            score = 0;
+            document.getElementById("overlay").style.display = "none";
+            spawn(); spawn();
+            draw();
         }
 
-        function continuePlaying() { overlayWin.style.display = "none"; }
+        function spawn() {
+            let empty = board.map((v, i) => v === 0 ? i : null).filter(v => v !== null);
+            if (empty.length) board[empty[Math.floor(Math.random() * empty.length)]] = Math.random() < 0.9 ? 2 : 4;
+        }
 
-        function updateView() {
-            scoreElement.innerText = score;
-            if (score > bestScore) {
-                bestScore = score;
-                localStorage.setItem("2048_best", bestScore);
-            }
-            bestScoreElement.innerText = bestScore;
-            boardElement.innerHTML = "";
-            for (let r = 0; r < rows; r++) {
-                for (let c = 0; c < columns; c++) {
-                    let val = board[r][c];
-                    let tile = document.createElement("div");
-                    tile.className = val > 0 ? `tile t${val <= 2048 ? val : 'super'}` : "grid-cell";
-                    tile.innerText = val > 0 ? val : "";
-                    boardElement.appendChild(tile);
+        function draw() {
+            boardEl.innerHTML = "";
+            board.forEach(val => {
+                let cell = document.createElement("div");
+                if (val > 0) {
+                    cell.className = `tile t${val <= 2048 ? val : 'super'}`;
+                    cell.innerText = val;
+                } else {
+                    cell.className = "grid-cell";
+                }
+                boardEl.appendChild(cell);
+            });
+            document.getElementById("score").innerText = score;
+        }
+
+        // Lógica de deslize CORRIGIDA
+        function slideLogic(line) {
+            let row = line.filter(v => v !== 0);
+            for (let i = 0; i < row.length - 1; i++) {
+                if (row[i] === row[i+1]) {
+                    row[i] *= 2;
+                    score += row[i];
+                    row.splice(i + 1, 1);
                 }
             }
+            while (row.length < 4) row.push(0);
+            return row;
         }
 
-        function triggerArrow(dir) {
-            const arrowMap = { 'ArrowUp': 'up', 'ArrowDown': 'down', 'ArrowLeft': 'left', 'ArrowRight': 'right' };
-            const suffix = arrowMap[dir];
-            const el = document.getElementById(`arrow-${suffix}`);
-            if (el) {
-                const className = `active-${suffix}`;
-                el.classList.remove(className);
-                void el.offsetWidth; // Force reflow
-                el.classList.add(className);
-                setTimeout(() => el.classList.remove(className), 300);
-            }
-        }
-
-        function slide(row) {
-            let arr = row.filter(n => n !== 0);
-            for (let i = 0; i < arr.length - 1; i++) {
-                if (arr[i] === arr[i+1]) {
-                    arr[i] *= 2; arr[i+1] = 0; score += arr[i];
+        function move(dir) {
+            let oldBoard = [...board];
+            for (let i = 0; i < 4; i++) {
+                let line = [];
+                // Extrai linha ou coluna
+                for (let j = 0; j < 4; j++) {
+                    if (dir === 'up') line.push(board[i + j * 4]);
+                    else if (dir === 'down') line.push(board[i + (3 - j) * 4]);
+                    else if (dir === 'left') line.push(board[i * 4 + j]);
+                    else if (dir === 'right') line.push(board[i * 4 + (3 - j)]);
                 }
-            }
-            arr = arr.filter(n => n !== 0);
-            while (arr.length < 4) arr.push(0);
-            return arr;
-        }
-
-        function handleInput(dir) {
-            const prev = JSON.stringify(board);
-            if (dir === 'ArrowLeft') {
-                for (let r = 0; r < 4; r++) board[r] = slide(board[r]);
-            } else if (dir === 'ArrowRight') {
-                for (let r = 0; r < 4; r++) board[r] = slide(board[r].reverse()).reverse();
-            } else if (dir === 'ArrowUp') {
-                for (let c = 0; c < 4; c++) {
-                    let col = [board[0][c], board[1][c], board[2][c], board[3][c]];
-                    col = slide(col);
-                    for (let r = 0; r < 4; r++) board[r][c] = col[r];
-                }
-            } else if (dir === 'ArrowDown') {
-                for (let c = 0; c < 4; c++) {
-                    let col = [board[0][c], board[1][c], board[2][c], board[3][c]];
-                    col = slide(col.reverse()).reverse();
-                    for (let r = 0; r < 4; r++) board[r][c] = col[r];
+                
+                let movedLine = slideLogic(line);
+                
+                // Devolve para o board
+                for (let j = 0; j < 4; j++) {
+                    if (dir === 'up') board[i + j * 4] = movedLine[j];
+                    else if (dir === 'down') board[i + (3 - j) * 4] = movedLine[j];
+                    else if (dir === 'left') board[i * 4 + j] = movedLine[j];
+                    else if (dir === 'right') board[i * 4 + (3 - j)] = movedLine[j];
                 }
             }
 
-            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(dir)) {
-                triggerArrow(dir);
+            animateArrow(dir);
+            if (JSON.stringify(oldBoard) !== JSON.stringify(board)) {
+                spawn();
+                draw();
+                if (!canMove()) document.getElementById("overlay").style.display = "flex";
             }
-
-            if (prev !== JSON.stringify(board)) {
-                spawnTile();
-                updateView();
-                setTimeout(checkStatus, 100);
-            }
-        }
-
-        function spawnTile() {
-            let empty = [];
-            for(let r=0; r<4; r++) for(let c=0; c<4; c++) if(board[r][c]===0) empty.push({r,c});
-            if (empty.length > 0) {
-                let {r, c} = empty[Math.floor(Math.random() * empty.length)];
-                board[r][c] = Math.random() < 0.9 ? 2 : 4;
-            }
-        }
-
-        function checkStatus() {
-            if (!hasWon2048) {
-                for(let r=0; r<4; r++) for(let c=0; c<4; c++) if(board[r][c]===2048) {
-                    hasWon2048 = true; overlayWin.style.display = "flex"; return;
-                }
-            }
-            if (!canMove()) overlayLoss.style.display = "flex";
         }
 
         function canMove() {
-            for(let r=0; r<4; r++) for(let c=0; c<4; c++) {
-                if(board[r][c]===0) return true;
-                if(r<3 && board[r][c]===board[r+1][c]) return true;
-                if(c<3 && board[r][c]===board[r][c+1]) return true;
+            if (board.includes(0)) return true;
+            for (let i = 0; i < 16; i++) {
+                if (i % 4 < 3 && board[i] === board[i+1]) return true;
+                if (i < 12 && board[i] === board[i+4]) return true;
             }
             return false;
         }
 
-        document.addEventListener('keyup', (e) => handleInput(e.code));
+        function animateArrow(dir) {
+            const el = document.getElementById(`arrow-${dir}`);
+            el.classList.remove(`active-${dir}`);
+            void el.offsetWidth;
+            el.classList.add(`active-${dir}`);
+        }
 
-        let startX, startY;
-        document.addEventListener('touchstart', (e) => {
-            startX = e.touches[0].clientX; startY = e.touches[0].clientY;
-        }, {passive: false});
-        document.addEventListener('touchmove', (e) => e.preventDefault(), {passive: false});
-        document.addEventListener('touchend', (e) => {
-            let dx = e.changedTouches[0].clientX - startX, dy = e.changedTouches[0].clientY - startY;
+        // Controles
+        document.addEventListener('keydown', e => {
+            if (e.key === "ArrowUp") move('up');
+            if (e.key === "ArrowDown") move('down');
+            if (e.key === "ArrowLeft") move('left');
+            if (e.key === "ArrowRight") move('right');
+        });
+
+        let tsX, tsY;
+        document.addEventListener('touchstart', e => { tsX = e.touches[0].clientX; tsY = e.touches[0].clientY; }, {passive: false});
+        document.addEventListener('touchmove', e => e.preventDefault(), {passive: false});
+        document.addEventListener('touchend', e => {
+            let dx = e.changedTouches[0].clientX - tsX, dy = e.changedTouches[0].clientY - tsY;
             if (Math.max(Math.abs(dx), Math.abs(dy)) > 30) {
-                handleInput(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'ArrowRight' : 'ArrowLeft') : (dy > 0 ? 'ArrowDown' : 'ArrowUp'));
+                if (Math.abs(dx) > Math.abs(dy)) move(dx > 0 ? 'right' : 'left');
+                else move(dy > 0 ? 'down' : 'up');
             }
-        }, {passive: false});
+        });
+
+        restartGame();
     </script>
 </body>
 </html>

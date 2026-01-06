@@ -16,6 +16,7 @@
             --grid-color: #bbada0;
             --empty-cell: #cdc1b4;
             --text-color: #776e65;
+            --arrow-color: rgba(143, 122, 102, 0.6);
         }
 
         * {
@@ -50,10 +51,7 @@
 
         h1 { font-size: 48px; font-weight: 800; margin: 0; line-height: 1; }
 
-        .scores-container {
-            display: flex;
-            gap: 10px;
-        }
+        .scores-container { display: flex; gap: 10px; }
 
         .score-box {
             background: #bbada0;
@@ -70,6 +68,12 @@
         .score-label { font-size: 11px; text-transform: uppercase; color: #eee4da; font-weight: bold; }
         .score-value { font-size: 20px; font-weight: bold; display: block; }
 
+        /* Container do Tabuleiro e Setas */
+        .board-wrapper {
+            position: relative;
+            padding: 20px; /* Espaço para as setas aparecerem */
+        }
+
         #game-board {
             position: relative;
             background-color: var(--grid-color);
@@ -82,7 +86,43 @@
             grid-template-rows: repeat(4, 1fr);
             gap: 10px;
             touch-action: none;
+            z-index: 2;
         }
+
+        /* --- ESTILOS DAS SETAS DE ACESSIBILIDADE --- */
+        .nav-arrow {
+            position: absolute;
+            font-size: 40px;
+            color: var(--arrow-color);
+            opacity: 0;
+            transition: none;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .arrow-up { top: -20px; left: 50%; transform: translateX(-50%); }
+        .arrow-down { bottom: -20px; left: 50%; transform: translateX(-50%); }
+        .arrow-left { left: -20px; top: 50%; transform: translateY(-50%); }
+        .arrow-right { right: -20px; top: 50%; transform: translateY(-50%); }
+
+        .active-arrow { animation: arrow-pulse 0.4s ease-out; }
+
+        @keyframes arrow-pulse {
+            0% { opacity: 0; transform: scale(0.8) translate(-50%, -50%); }
+            50% { opacity: 1; transform: scale(1.2) translate(-50%, -50%); }
+            100% { opacity: 0; transform: scale(1) translate(-50%, -50%); }
+        }
+
+        /* Ajuste específico para as setas centrais */
+        .arrow-up.active-arrow { animation-name: arrow-pulse-up; }
+        .arrow-down.active-arrow { animation-name: arrow-pulse-down; }
+        .arrow-left.active-arrow { animation-name: arrow-pulse-left; }
+        .arrow-right.active-arrow { animation-name: arrow-pulse-right; }
+
+        @keyframes arrow-pulse-up { 0% { opacity: 0; top: 0; } 50% { opacity: 1; top: -30px; } 100% { opacity: 0; top: -20px; } }
+        @keyframes arrow-pulse-down { 0% { opacity: 0; bottom: 0; } 50% { opacity: 1; bottom: -30px; } 100% { opacity: 0; bottom: -20px; } }
+        @keyframes arrow-pulse-left { 0% { opacity: 0; left: 0; } 50% { opacity: 1; left: -30px; } 100% { opacity: 0; left: -20px; } }
+        @keyframes arrow-pulse-right { 0% { opacity: 0; right: 0; } 50% { opacity: 1; right: -30px; } 100% { opacity: 0; right: -20px; } }
 
         .grid-cell { background-color: var(--empty-cell); border-radius: 3px; width: 100%; height: 100%; }
 
@@ -97,7 +137,6 @@
             transition: transform 0.1s ease-in-out;
         }
 
-        /* Cores das Peças */
         .t2 { background: #eee4da; color: #776e65; }
         .t4 { background: #ede0c8; color: #776e65; }
         .t8 { background: #f2b179; color: #f9f6f2; }
@@ -111,10 +150,7 @@
         .t2048 { background: #edc22e; color: #f9f6f2; font-size: 24px; box-shadow: 0 0 30px 5px rgba(243, 215, 116, 0.4); }
         .tsuper { background: #3c3a32; color: #f9f6f2; font-size: 20px; }
 
-        @keyframes pop {
-            0% { transform: scale(0.5); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
-        }
+        @keyframes pop { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
         .overlay {
             position: absolute;
@@ -143,8 +179,8 @@
         .btn-restart { margin-top: 20px; width: 320px; }
 
         @media (min-width: 500px) {
-            .header-container, #game-board, .btn-restart { width: 450px; }
-            #game-board { height: 450px; }
+            .header-container, .board-wrapper, .btn-restart { width: 450px; }
+            #game-board { width: 450px; height: 450px; }
             .tile { font-size: 50px; }
             .score-value { font-size: 25px; }
         }
@@ -166,7 +202,12 @@
         </div>
     </div>
 
-    <div style="position: relative;">
+    <div class="board-wrapper">
+        <div id="arrow-up" class="nav-arrow arrow-up">▲</div>
+        <div id="arrow-down" class="nav-arrow arrow-down">▼</div>
+        <div id="arrow-left" class="nav-arrow arrow-left">◀</div>
+        <div id="arrow-right" class="nav-arrow arrow-right">▶</div>
+
         <div id="game-board"></div>
 
         <div id="overlay-win" class="overlay">
@@ -189,8 +230,6 @@
         let board;
         let score = 0;
         let hasWon2048 = false;
-
-        // Recupera o recorde salvo no navegador
         let bestScore = parseInt(localStorage.getItem("2048_best")) || 0;
 
         const boardElement = document.getElementById("game-board");
@@ -200,7 +239,6 @@
         const overlayLoss = document.getElementById("overlay-loss");
 
         window.onload = () => {
-            // Mostra o recorde logo ao carregar a página
             bestScoreElement.innerText = bestScore;
             restartGame();
         };
@@ -221,15 +259,11 @@
         }
 
         function updateView() {
-            // Atualiza Pontuação Atual
             scoreElement.innerText = score;
-            
-            // Lógica do Recorde: Compara, Salva e Exibe na hora
             if (score > bestScore) {
                 bestScore = score;
                 localStorage.setItem("2048_best", bestScore);
             }
-            // Atualiza o elemento visual do Recorde
             bestScoreElement.innerText = bestScore;
 
             boardElement.innerHTML = "";
@@ -249,7 +283,21 @@
             }
         }
 
-        // --- LÓGICA DO JOGO (Movimentação) ---
+        // --- FUNÇÃO PARA ATIVAR SETA VISUAL ---
+        function triggerArrow(dir) {
+            const arrowMap = {
+                'ArrowUp': 'arrow-up',
+                'ArrowDown': 'arrow-down',
+                'ArrowLeft': 'arrow-left',
+                'ArrowRight': 'arrow-right'
+            };
+            const element = document.getElementById(arrowMap[dir]);
+            if (element) {
+                element.classList.remove('active-arrow');
+                void element.offsetWidth; // Truque para reiniciar animação CSS
+                element.classList.add('active-arrow');
+            }
+        }
 
         function filterZero(row) { return row.filter(num => num != 0); }
 
@@ -259,7 +307,7 @@
                 if (row[i] == row[i+1]) {
                     row[i] *= 2;
                     row[i+1] = 0;
-                    score += row[i]; // Incrementa score
+                    score += row[i];
                 }
             }
             row = filterZero(row);
@@ -360,6 +408,11 @@
             else if (direction === 'ArrowUp') moved = moveUp();
             else if (direction === 'ArrowDown') moved = moveDown();
 
+            // Ativa a seta visual independente se o movimento foi válido ou não (feedback de toque)
+            if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(direction)) {
+                triggerArrow(direction);
+            }
+
             if (moved) {
                 spawnTile();
                 updateView();
@@ -369,7 +422,6 @@
 
         document.addEventListener('keyup', (e) => handleInput(e.code));
 
-        // Touch para Mobile
         let startX, startY;
         document.addEventListener('touchstart', (e) => {
             startX = e.touches[0].clientX;

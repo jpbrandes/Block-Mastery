@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="2048 Endless">
+    <meta name="theme-color" content="#faf8ef">
+    
+    <title>2048 Endless Mode</title>
+
+    <style>
+        /* --- ESTILOS GERAIS --- */
+        :root {
+            --bg-color: #faf8ef;
+            --grid-color: #bbada0;
+            --empty-cell: #cdc1b4;
+            --text-color: #776e65;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none; /* Impede seleção de texto (vital para mobile) */
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            font-family: "Clear Sans", "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden; /* Trava rolagem */
+        }
+
+        /* --- CABEÇALHO --- */
+        .header-container {
+            width: 320px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        h1 {
+            font-size: 50px;
+            font-weight: 800;
+            margin: 0;
+        }
+
+        .score-box {
+            background: #bbada0;
+            padding: 5px 20px;
+            border-radius: 6px;
+            text-align: center;
+            color: white;
+            min-width: 80px;
+        }
+
+        .score-label { font-size: 11px; text-transform: uppercase; color: #eee4da; }
+        .score-value { font-size: 22px; font-weight: bold; }
+
+        /* --- TABULEIRO --- */
+        #game-board {
+            position: relative;
+            background-color: var(--grid-color);
+            width: 320px;
+            height: 320px;
+            border-radius: 6px;
+            padding: 10px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 10px;
+            touch-action: none; /* Desativa gestos padrão do navegador na área do jogo */
+        }
+
+        .grid-cell {
+            background-color: var(--empty-cell);
+            border-radius: 3px;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* --- PEÇAS (TILES) --- */
+        .tile {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            border-radius: 3px;
+            font-size: 35px;
+            /* Animação de surgimento e fusão */
+            animation: pop 0.2s ease-in-out; 
+            transition: transform 0.1s ease-in-out;
+        }
+
+        /* Cores Dinâmicas */
+        .t2 { background: #eee4da; color: #776e65; }
+        .t4 { background: #ede0c8; color: #776e65; }
+        .t8 { background: #f2b179; color: #f9f6f2; }
+        .t16 { background: #f59563; color: #f9f6f2; }
+        .t32 { background: #f67c5f; color: #f9f6f2; }
+        .t64 { background: #f65e3b; color: #f9f6f2; }
+        .t128 { background: #edcf72; color: #f9f6f2; font-size: 30px; }
+        .t256 { background: #edcc61; color: #f9f6f2; font-size: 30px; }
+        .t512 { background: #edc850; color: #f9f6f2; font-size: 30px; }
+        .t1024 { background: #edc53f; color: #f9f6f2; font-size: 24px; }
+        .t2048 { background: #edc22e; color: #f9f6f2; font-size: 24px; box-shadow: 0 0 30px 5px rgba(243, 215, 116, 0.4); }
+        .tsuper { background: #3c3a32; color: #f9f6f2; font-size: 20px; } /* Para 4096+ */
+
+        @keyframes pop {
+            0% { transform: scale(0.5); opacity: 0; }
+            80% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+
+        /* --- OVERLAYS (MENSAGENS) --- */
+        .overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(238, 228, 218, 0.8);
+            z-index: 100;
+            display: none; /* Oculto por padrão */
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            border-radius: 6px;
+            animation: fadein 0.5s;
+        }
+
+        .overlay h2 { font-size: 40px; color: #776e65; margin-bottom: 10px; }
+        .overlay p { font-size: 18px; color: #776e65; margin-bottom: 20px; }
+
+        @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+
+        /* --- BOTÕES --- */
+        .btn {
+            background-color: #8f7a66;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            padding: 10px 20px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn-restart { margin-top: 20px; width: 320px; }
+        .btn-continue { background-color: #edc22e; } /* Dourado para o botão continuar */
+
+        /* --- RESPONSIVIDADE --- */
+        @media (min-width: 500px) {
+            .header-container, #game-board, .btn-restart { width: 450px; }
+            #game-board { height: 450px; }
+            .tile { font-size: 50px; }
+            .t128, .t256, .t512 { font-size: 40px; }
+            .t1024, .t2048 { font-size: 32px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-container">
+        <h1>2048</h1>
+        <div class="score-box">
+            <div class="score-label">Score</div>
+            <div class="score-value" id="score">0</div>
+        </div>
+    </div>
+
+    <div style="position: relative;">
+        <div id="game-board"></div>
+
+        <div id="overlay-win" class="overlay">
+            <h2>Você venceu!</h2>
+            <p>Chegou ao bloco 2048.</p>
+            <div>
+                <button class="btn btn-continue" onclick="continuePlaying()">Continuar (Infinito)</button>
+                <button class="btn" onclick="restartGame()">Novo Jogo</button>
+            </div>
+        </div>
+
+        <div id="overlay-loss" class="overlay">
+            <h2>Fim de Jogo!</h2>
+            <p>Sem mais movimentos possíveis.</p>
+            <button class="btn" onclick="restartGame()">Tentar Novamente</button>
+        </div>
+    </div>
+
+    <button class="btn btn-restart" onclick="restartGame()">Reiniciar Jogo</button>
+
+    <script>
+        // --- CONFIGURAÇÕES E ESTADO DO JOGO ---
+        const rows = 4;
+        const columns = 4;
+        let board;          // A matriz 4x4
+        let score = 0;      // Pontuação
+        let hasWon2048 = false; // Flag para controlar se já mostramos a vitória do 2048
+
+        // Referências do DOM
+        const boardElement = document.getElementById("game-board");
+        const scoreElement = document.getElementById("score");
+        const overlayWin = document.getElementById("overlay-win");
+        const overlayLoss = document.getElementById("overlay-loss");
+
+        // Inicializa ao carregar
+        window.onload = restartGame;
+
+        // --- LÓGICA PRINCIPAL (Estudante de C: Preste atenção aqui) ---
+
+        function restartGame() {
+            // Em C: int board[4][4] = {{0}};
+            // Resetamos todas as variáveis de estado
+            board = [
+                [0, 0, 0, 0],
+                [0, 0, 0, 0],
+                [0, 0, 0, 0],
+                [0, 0, 0, 0]
+            ];
+            score = 0;
+            hasWon2048 = false; // Reset da flag de vitória
+            
+            // Esconde overlays
+            overlayWin.style.display = "none";
+            overlayLoss.style.display = "none";
+            
+            // Coloca dois números iniciais
+            spawnTile();
+            spawnTile();
+            
+            updateView();
+        }
+
+        // Função para continuar jogando após o 2048 (Modo Infinito)
+        function continuePlaying() {
+            overlayWin.style.display = "none";
+            // O jogo continua, mas não mostramos a mensagem de vitória novamente
+            // porque hasWon2048 já é true.
+        }
+
+        // Renderização (Transforma a matriz em HTML)
+        function updateView() {
+            scoreElement.innerText = score;
+            boardElement.innerHTML = ""; // Limpa o DOM
+
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < columns; c++) {
+                    let tileValue = board[r][c];
+                    
+                    // Cria div para a peça
+                    let tile = document.createElement("div");
+                    
+                    // Se valor > 0, é uma peça. Se 0, é fundo (grid-cell)
+                    if (tileValue > 0) {
+                        tile.innerText = tileValue;
+                        tile.classList.add("tile");
+                        // Adiciona classe de cor. Se for > 2048, usa estilo genérico "tsuper"
+                        if (tileValue <= 2048) {
+                            tile.classList.add("t" + tileValue);
+                        } else {
+                            tile.classList.add("tsuper");
+                        }
+                    } else {
+                        tile.classList.add("grid-cell");
+                    }
+                    boardElement.appendChild(tile);
+                }
+            }
+        }
+
+        // --- ALGORITMOS DE MOVIMENTO (COMPARATIVO COM C) ---
+
+        /* * LÓGICA DE SLIDE (DESLIZAR):
+         * Em C, manipular arrays requer mover elementos manualmente.
+         * A função abaixo simula o processo de "Compressão" e "Fusão".
+         */
+        function filterZero(row) {
+            // Em C: Criaríamos um novo array temporário e copiaríamos apenas os != 0
+            return row.filter(num => num != 0);
+        }
+
+        function slide(row) {
+            // 1. Remover zeros (ex: [2, 0, 2, 0] vira [2, 2])
+            row = filterZero(row);
+
+            // 2. Fundir adjacentes iguais
+            // Em C: Loop for(int i=0; i < tamanho-1; i++)
+            for (let i = 0; i < row.length - 1; i++) {
+                // Verifica ponteiros/índices vizinhos
+                if (row[i] == row[i+1]) {
+                    row[i] *= 2;     // Dobra o valor
+                    row[i+1] = 0;    // Zera o vizinho que foi absorvido
+                    score += row[i]; // Aumenta pontuação
+                }
+            }
+
+            // 3. Remover zeros gerados na fusão (ex: [4, 0] vira [4])
+            row = filterZero(row);
+
+            // 4. Preencher com zeros até voltar ao tamanho 4
+            // Em C: while(tamanho < 4) { array[tamanho] = 0; tamanho++; }
+            while (row.length < columns) {
+                row.push(0);
+            }
+            return row;
+        }
+
+        // Funções Direcionais
+        // Para simplificar, transformamos todas as direções em "Esquerda",
+        // aplicamos a lógica e depois desfazemos a transformação.
+
+        function moveLeft() {
+            let moved = false;
+            for (let r = 0; r < rows; r++) {
+                let original = board[r];
+                let newRow = slide(original); // Aplica lógica
+                board[r] = newRow;
+                // Compara strings para ver se houve mudança no array
+                if (original.join() !== newRow.join()) moved = true; 
+            }
+            return moved;
+        }
+
+        function moveRight() {
+            let moved = false;
+            for (let r = 0; r < rows; r++) {
+                let original = board[r];
+                // Inverte array -> desliza esquerda -> inverte de volta
+                let reversed = board[r].slice().reverse(); 
+                let newRow = slide(reversed);
+                board[r] = newRow.reverse();
+                
+                if (original.join() !== board[r].join()) moved = true;
+            }
+            return moved;
+        }
+
+        function moveUp() {
+            let moved = false;
+            // Processa por COLUNAS ao invés de LINHAS
+            for (let c = 0; c < columns; c++) {
+                // Extrai coluna para um array temporário
+                let row = [board[0][c], board[1][c], board[2][c], board[3][c]];
+                let originalStr = row.join();
+                
+                let newRow = slide(row);
+                
+                // Devolve valores para a matriz
+                for (let r = 0; r < rows; r++) {
+                    board[r][c] = newRow[r];
+                }
+                if (originalStr !== newRow.join()) moved = true;
+            }
+            return moved;
+        }
+
+        function moveDown() {
+            let moved = false;
+            for (let c = 0; c < columns; c++) {
+                let row = [board[0][c], board[1][c], board[2][c], board[3][c]];
+                let originalStr = row.join();
+                
+                row.reverse(); // Inverte para processar de baixo para cima
+                row = slide(row);
+                row.reverse(); // Desinverte
+                
+                for (let r = 0; r < rows; r++) {
+                    board[r][c] = row[r];
+                }
+                if (originalStr !== row.join()) moved = true;
+            }
+            return moved;
+        }
+
+        // --- GERAÇÃO DE PEÇAS ---
+        function spawnTile() {
+            // Em C: Loop while até achar coordenada com valor 0
+            if (!hasEmptyTile()) return;
+
+            let found = false;
+            while (!found) {
+                let r = Math.floor(Math.random() * rows);
+                let c = Math.floor(Math.random() * columns);
+                
+                if (board[r][c] == 0) {
+                    board[r][c] = Math.random() < 0.9 ? 2 : 4;
+                    found = true;
+                }
+            }
+        }
+
+        function hasEmptyTile() {
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < columns; c++) {
+                    if (board[r][c] == 0) return true;
+                }
+            }
+            return false;
+        }
+
+        // --- VERIFICAÇÃO DE ESTADO (WIN/LOSS) ---
+        function checkStatus() {
+            // 1. Checar Vitória (apenas se ainda não venceu nesta partida)
+            if (!hasWon2048) {
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < columns; c++) {
+                        if (board[r][c] == 2048) {
+                            hasWon2048 = true; // Marca que venceu
+                            overlayWin.style.display = "flex"; // Mostra mensagem
+                            // Nota: NÃO damos return aqui, o jogo pausa na UI, mas a lógica permite continuar
+                        }
+                    }
+                }
+            }
+
+            // 2. Checar Derrota (Sem espaços E sem movimentos possíveis)
+            if (!hasEmptyTile() && !canMove()) {
+                overlayLoss.style.display = "flex";
+            }
+        }
+
+        function canMove() {
+            // Varre a matriz procurando vizinhos iguais
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < columns; c++) {
+                    if (r < rows - 1 && board[r][c] == board[r+1][c]) return true; // Checa abaixo
+                    if (c < columns - 1 && board[r][c] == board[r][c+1]) return true; // Checa direita
+                }
+            }
+            return false;
+        }
+
+        // --- CONTROLES E EVENTOS ---
+
+        function handleInput(direction) {
+            let moved = false;
+            if (direction === 'ArrowLeft') moved = moveLeft();
+            else if (direction === 'ArrowRight') moved = moveRight();
+            else if (direction === 'ArrowUp') moved = moveUp();
+            else if (direction === 'ArrowDown') moved = moveDown();
+
+            if (moved) {
+                spawnTile();
+                updateView();
+                // Pequeno delay para a animação CSS acontecer antes do alerta
+                setTimeout(checkStatus, 150);
+            }
+        }
+
+        // Teclado (Desktop)
+        document.addEventListener('keyup', (e) => {
+            handleInput(e.code);
+        });
+
+        // Touch (Mobile - Swipe)
+        let startX, startY, endX, endY;
+
+        document.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+        }, {passive: false});
+
+        // Importante: preventDefault no touchmove evita o scroll da tela enquanto joga
+        document.addEventListener('touchmove', (e) => {
+            e.preventDefault(); 
+        }, {passive: false});
+
+        document.addEventListener('touchend', (e) => {
+            endX = e.changedTouches[0].clientX;
+            endY = e.changedTouches[0].clientY;
+            handleSwipe();
+        }, {passive: false});
+
+        function handleSwipe() {
+            let diffX = endX - startX;
+            let diffY = endY - startY;
+            let threshold = 30; // Mínimo de pixels para considerar movimento
+
+            if (Math.abs(diffX) > Math.abs(diffY)) {
+                // Movimento Horizontal
+                if (Math.abs(diffX) > threshold) {
+                    handleInput(diffX > 0 ? 'ArrowRight' : 'ArrowLeft');
+                }
+            } else {
+                // Movimento Vertical
+                if (Math.abs(diffY) > threshold) {
+                    handleInput(diffY > 0 ? 'ArrowDown' : 'ArrowUp');
+                }
+            }
+        }
+    </script>
+</body>
+</html>

@@ -68,10 +68,9 @@
         .score-label { font-size: 11px; text-transform: uppercase; color: #eee4da; font-weight: bold; }
         .score-value { font-size: 20px; font-weight: bold; display: block; }
 
-        /* Container que segura o board e as setas */
         .board-wrapper {
             position: relative;
-            padding: 40px; /* Espaço para as setas não cortarem */
+            padding: 45px; /* Aumentado para garantir espaço das setas */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -89,47 +88,56 @@
             grid-template-rows: repeat(4, 1fr);
             gap: 10px;
             touch-action: none;
-            z-index: 2;
+            z-index: 5;
         }
 
-        /* --- CORREÇÃO DAS SETAS --- */
+        /* --- SISTEMA DE SETAS CORRIGIDO --- */
         .nav-arrow {
             position: absolute;
-            font-size: 50px;
+            font-size: 60px; /* Maiores para visibilidade */
             color: var(--arrow-color);
             opacity: 0;
             pointer-events: none;
             z-index: 10;
-            transition: none;
             display: flex;
             justify-content: center;
             align-items: center;
-            width: 60px;
-            height: 60px;
         }
 
-        /* Posicionamento nas 4 arestas exatas */
-        .arrow-up    { top: -20px; left: 50%; transform: translateX(-50%); }
-        .arrow-down  { bottom: -20px; left: 50%; transform: translateX(-50%); }
-        .arrow-left  { left: -20px; top: 50%; transform: translateY(-50%); }
-        .arrow-right { right: -20px; top: 50%; transform: translateY(-50%); }
+        /* Posicionamento base usando top/left fixos */
+        .arrow-up    { top: -15px; left: 50%; transform: translateX(-50%); }
+        .arrow-down  { bottom: -15px; left: 50%; transform: translateX(-50%); }
+        .arrow-left  { left: -15px; top: 50%; transform: translateY(-50%); }
+        .arrow-right { right: -15px; top: 50%; transform: translateY(-50%); }
 
-        /* Animação de pulso */
-        .active-arrow {
-            animation: arrow-pop 0.4s ease-out forwards;
+        /* Animações individuais para não resetar o transform de posicionamento */
+        .arrow-up.active-arrow    { animation: anim-up 0.5s ease-out; }
+        .arrow-down.active-arrow  { animation: anim-down 0.5s ease-out; }
+        .arrow-left.active-arrow  { animation: anim-left 0.5s ease-out; }
+        .arrow-right.active-arrow { animation: anim-right 0.5s ease-out; }
+
+        @keyframes anim-up {
+            0% { opacity: 0; top: 0; }
+            50% { opacity: 0.8; top: -35px; }
+            100% { opacity: 0; top: -25px; }
+        }
+        @keyframes anim-down {
+            0% { opacity: 0; bottom: 0; }
+            50% { opacity: 0.8; bottom: -35px; }
+            100% { opacity: 0; bottom: -25px; }
+        }
+        @keyframes anim-left {
+            0% { opacity: 0; left: 0; }
+            50% { opacity: 0.8; left: -35px; }
+            100% { opacity: 0; left: -25px; }
+        }
+        @keyframes anim-right {
+            0% { opacity: 0; right: 0; }
+            50% { opacity: 0.8; right: -35px; }
+            100% { opacity: 0; right: -25px; }
         }
 
-        @keyframes arrow-pop {
-            0% { opacity: 0; transform: translate(var(--tx, -50%), var(--ty, -50%)) scale(0.5); }
-            50% { opacity: 1; transform: translate(var(--tx, -50%), var(--ty, -50%)) scale(1.3); }
-            100% { opacity: 0; transform: translate(var(--tx, -50%), var(--ty, -50%)) scale(1); }
-        }
-
-        /* Variáveis de translação para manter o alinhamento central durante o scale */
-        .arrow-up, .arrow-down { --tx: -50%; --ty: 0; }
-        .arrow-left, .arrow-right { --tx: 0; --ty: -50%; }
-
-        /* Estilos das peças */
+        /* Grid e Tiles */
         .grid-cell { background-color: var(--empty-cell); border-radius: 3px; }
         .tile {
             display: flex; justify-content: center; align-items: center;
@@ -165,7 +173,6 @@
             .header-container, .btn-restart { width: 450px; }
             #game-board { width: 450px; height: 450px; }
             .tile { font-size: 50px; }
-            .score-value { font-size: 25px; }
         }
     </style>
 </head>
@@ -198,7 +205,6 @@
             <button class="btn" style="background-color: #edc22e;" onclick="continuePlaying()">Continuar</button>
             <button class="btn" onclick="restartGame()">Novo Jogo</button>
         </div>
-
         <div id="overlay-loss" class="overlay">
             <h2 style="font-size: 40px; color: #776e65;">Fim de Jogo!</h2>
             <button class="btn" onclick="restartGame()">Tentar Novamente</button>
@@ -225,8 +231,7 @@
 
         function restartGame() {
             board = Array(4).fill().map(() => Array(4).fill(0));
-            score = 0;
-            hasWon2048 = false;
+            score = 0; hasWon2048 = false;
             overlayWin.style.display = "none";
             overlayLoss.style.display = "none";
             spawnTile(); spawnTile();
@@ -242,7 +247,6 @@
                 localStorage.setItem("2048_best", bestScore);
             }
             bestScoreElement.innerText = bestScore;
-
             boardElement.innerHTML = "";
             for (let r = 0; r < rows; r++) {
                 for (let c = 0; c < columns; c++) {
@@ -264,27 +268,26 @@
             const el = document.getElementById(ids[dir]);
             if (el) {
                 el.classList.remove('active-arrow');
-                void el.offsetWidth; // Reinicia animação
+                void el.offsetWidth; // Força reflow para resetar animação
                 el.classList.add('active-arrow');
             }
         }
 
-        function filterZero(row) { return row.filter(n => n !== 0); }
         function slide(row) {
-            row = filterZero(row);
-            for (let i = 0; i < row.length - 1; i++) {
-                if (row[i] === row[i+1]) {
-                    row[i] *= 2; row[i+1] = 0; score += row[i];
+            let arr = row.filter(n => n !== 0);
+            for (let i = 0; i < arr.length - 1; i++) {
+                if (arr[i] === arr[i+1]) {
+                    arr[i] *= 2; arr[i+1] = 0; score += arr[i];
                 }
             }
-            row = filterZero(row);
-            while (row.length < 4) row.push(0);
-            return row;
+            arr = arr.filter(n => n !== 0);
+            while (arr.length < 4) arr.push(0);
+            return arr;
         }
 
         function handleInput(dir) {
             let moved = false;
-            const prevBoard = JSON.stringify(board);
+            const prev = JSON.stringify(board);
 
             if (dir === 'ArrowLeft') {
                 for (let r = 0; r < 4; r++) board[r] = slide(board[r]);
@@ -304,9 +307,12 @@
                 }
             }
 
-            triggerArrow(dir); // Sempre mostra a seta no comando
+            // Ativa a seta sempre que houver tentativa de movimento
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(dir)) {
+                triggerArrow(dir);
+            }
 
-            if (prevBoard !== JSON.stringify(board)) {
+            if (prev !== JSON.stringify(board)) {
                 spawnTile();
                 updateView();
                 setTimeout(checkStatus, 100);
@@ -340,7 +346,7 @@
             return false;
         }
 
-        document.addEventListener('keyup', (e) => { if(e.code.includes('Arrow')) handleInput(e.code); });
+        document.addEventListener('keyup', (e) => handleInput(e.code));
 
         let startX, startY;
         document.addEventListener('touchstart', (e) => {

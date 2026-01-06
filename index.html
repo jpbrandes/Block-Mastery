@@ -24,7 +24,7 @@
             height: 100vh;
             margin: 0;
             overflow: hidden;
-            position: relative; /* Para posicionar as setas */
+            position: relative;
         }
         .header { width: 320px; display: flex; justify-content: space-between; align-items: center; z-index: 10; }
         .score-container { background: #bbada0; padding: 5px 15px; border-radius: 3px; color: white; text-align: center; }
@@ -63,21 +63,21 @@
         /* Estilo dos Indicadores de Seta */
         .indicator {
             position: fixed;
-            font-size: 40px;
-            color: var(--bg-color);
+            font-size: 60px; /* Aumentei um pouco para ficar mais visível */
+            color: var(--accent-color);
             opacity: 0;
-            transition: opacity 0.2s, transform 0.2s;
-            pointer-events: none; /* Não atrapalha o toque */
-            z-index: 5;
+            transition: opacity 0.15s, transform 0.15s;
+            pointer-events: none;
+            z-index: 100; /* Garante que fique acima de tudo */
         }
-        #ind-up { top: 20px; left: 50%; transform: translateX(-50%) translateY(10px); }
-        #ind-down { bottom: 20px; left: 50%; transform: translateX(-50%) translateY(-10px); }
-        #ind-left { left: 20px; top: 50%; transform: translateY(-50%) translateX(10px); }
-        #ind-right { right: 20px; top: 50%; transform: translateY(-50%) translateX(-10px); }
+        #ind-up { top: 10%; left: 50%; transform: translateX(-50%) translateY(20px); }
+        #ind-down { bottom: 10%; left: 50%; transform: translateX(-50%) translateY(-20px); }
+        #ind-left { left: 5%; top: 50%; transform: translateY(-50%) translateX(20px); }
+        #ind-right { right: 5%; top: 50%; transform: translateY(-50%) translateX(-20px); }
 
         .indicator.active {
-            opacity: 0.6;
-            transform: translate(0, 0); /* Efeito suave de movimento */
+            opacity: 0.8;
+            transform: translate(0, 0) scale(1.2); /* Pequeno pulo na escala para dar ênfase */
         }
     </style>
 </head>
@@ -131,17 +131,18 @@
             scoreDisplay.innerHTML = score;
         }
 
-        // Função para mostrar a seta visual
         function showIndicator(direction) {
             const el = document.getElementById('ind-' + direction);
-            el.classList.add('active');
-            setTimeout(() => {
-                el.classList.remove('active');
-            }, 250); // A seta some após 250ms
+            if(el) {
+                el.classList.add('active');
+                setTimeout(() => {
+                    el.classList.remove('active');
+                }, 200); 
+            }
         }
 
         function move(direction) {
-            showIndicator(direction); // Ativa o feedback visual
+            showIndicator(direction);
             let hasChanged = false;
             
             if (direction === 'left' || direction === 'right') {
@@ -185,7 +186,6 @@
             return row;
         }
 
-        // Eventos de Teclado (Desktop)
         document.onkeydown = (e) => {
             if (e.key === 'ArrowLeft') move('left');
             else if (e.key === 'ArrowRight') move('right');
@@ -193,7 +193,6 @@
             else if (e.key === 'ArrowDown') move('down');
         };
 
-        // Eventos de Toque (Mobile)
         let touchStartX = 0;
         let touchStartY = 0;
         document.addEventListener('touchstart', e => {
@@ -216,7 +215,7 @@
             createBoard();
         }
 
-        createBoard();
+        window.onload = createBoard; // Garante que o jogo comece assim que carregar
     </script>
 </body>
 </html>

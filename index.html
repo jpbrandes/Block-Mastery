@@ -11,7 +11,6 @@
     <title>2048 Endless Mode</title>
 
     <style>
-        /* --- ESTILOS GERAIS --- */
         :root {
             --bg-color: #faf8ef;
             --grid-color: #bbada0;
@@ -49,28 +48,27 @@
             margin-bottom: 15px;
         }
 
-        h1 {
-            font-size: 50px;
-            font-weight: 800;
-            margin: 0;
-        }
+        h1 { font-size: 48px; font-weight: 800; margin: 0; line-height: 1; }
 
         .scores-container {
             display: flex;
-            gap: 5px;
+            gap: 10px;
         }
 
         .score-box {
             background: #bbada0;
-            padding: 5px 10px;
+            padding: 8px 12px;
             border-radius: 6px;
             text-align: center;
             color: white;
-            min-width: 70px;
+            min-width: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
-        .score-label { font-size: 10px; text-transform: uppercase; color: #eee4da; font-weight: bold; }
-        .score-value { font-size: 18px; font-weight: bold; }
+        .score-label { font-size: 11px; text-transform: uppercase; color: #eee4da; font-weight: bold; }
+        .score-value { font-size: 20px; font-weight: bold; display: block; }
 
         #game-board {
             position: relative;
@@ -86,12 +84,7 @@
             touch-action: none;
         }
 
-        .grid-cell {
-            background-color: var(--empty-cell);
-            border-radius: 3px;
-            width: 100%;
-            height: 100%;
-        }
+        .grid-cell { background-color: var(--empty-cell); border-radius: 3px; width: 100%; height: 100%; }
 
         .tile {
             display: flex;
@@ -104,6 +97,7 @@
             transition: transform 0.1s ease-in-out;
         }
 
+        /* Cores das Peças */
         .t2 { background: #eee4da; color: #776e65; }
         .t4 { background: #ede0c8; color: #776e65; }
         .t8 { background: #f2b179; color: #f9f6f2; }
@@ -119,8 +113,7 @@
 
         @keyframes pop {
             0% { transform: scale(0.5); opacity: 0; }
-            80% { transform: scale(1.1); opacity: 1; }
-            100% { transform: scale(1); }
+            100% { transform: scale(1); opacity: 1; }
         }
 
         .overlay {
@@ -134,36 +127,26 @@
             justify-content: center;
             text-align: center;
             border-radius: 6px;
-            animation: fadein 0.5s;
         }
-
-        .overlay h2 { font-size: 40px; color: #776e65; margin-bottom: 10px; }
-        .overlay p { font-size: 18px; color: #776e65; margin-bottom: 20px; }
-
-        @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
 
         .btn {
             background-color: #8f7a66;
             color: white;
             border: none;
             border-radius: 3px;
-            padding: 10px 20px;
+            padding: 12px 20px;
             font-size: 18px;
             font-weight: bold;
             cursor: pointer;
             margin: 5px;
         }
         .btn-restart { margin-top: 20px; width: 320px; }
-        .btn-continue { background-color: #edc22e; }
 
         @media (min-width: 500px) {
             .header-container, #game-board, .btn-restart { width: 450px; }
             #game-board { height: 450px; }
             .tile { font-size: 50px; }
-            .t128, .t256, .t512 { font-size: 40px; }
-            .t1024, .t2048 { font-size: 32px; }
-            .score-box { min-width: 90px; }
-            .score-value { font-size: 22px; }
+            .score-value { font-size: 25px; }
         }
     </style>
 </head>
@@ -173,12 +156,12 @@
         <h1>2048</h1>
         <div class="scores-container">
             <div class="score-box">
-                <div class="score-label">Score</div>
-                <div class="score-value" id="score">0</div>
+                <span class="score-label">Score</span>
+                <span class="score-value" id="score">0</span>
             </div>
             <div class="score-box">
-                <div class="score-label">Best</div>
-                <div class="score-value" id="best-score">0</div>
+                <span class="score-label">Best</span>
+                <span class="score-value" id="best-score">0</span>
             </div>
         </div>
     </div>
@@ -187,17 +170,13 @@
         <div id="game-board"></div>
 
         <div id="overlay-win" class="overlay">
-            <h2>Você venceu!</h2>
-            <p>Chegou ao bloco 2048.</p>
-            <div>
-                <button class="btn btn-continue" onclick="continuePlaying()">Continuar</button>
-                <button class="btn" onclick="restartGame()">Novo Jogo</button>
-            </div>
+            <h2 style="font-size: 40px; color: #776e65;">Você venceu!</h2>
+            <button class="btn" style="background-color: #edc22e;" onclick="continuePlaying()">Continuar</button>
+            <button class="btn" onclick="restartGame()">Novo Jogo</button>
         </div>
 
         <div id="overlay-loss" class="overlay">
-            <h2>Fim de Jogo!</h2>
-            <p>Sem movimentos possíveis.</p>
+            <h2 style="font-size: 40px; color: #776e65;">Fim de Jogo!</h2>
             <button class="btn" onclick="restartGame()">Tentar Novamente</button>
         </div>
     </div>
@@ -209,8 +188,10 @@
         const columns = 4;
         let board;
         let score = 0;
-        let bestScore = parseInt(localStorage.getItem("2048-best-score")) || 0;
         let hasWon2048 = false;
+
+        // Recupera o recorde salvo no navegador
+        let bestScore = parseInt(localStorage.getItem("2048_best")) || 0;
 
         const boardElement = document.getElementById("game-board");
         const scoreElement = document.getElementById("score");
@@ -219,7 +200,7 @@
         const overlayLoss = document.getElementById("overlay-loss");
 
         window.onload = () => {
-            // Garante que o High Score apareça assim que o site carregar
+            // Mostra o recorde logo ao carregar a página
             bestScoreElement.innerText = bestScore;
             restartGame();
         };
@@ -240,16 +221,16 @@
         }
 
         function updateView() {
+            // Atualiza Pontuação Atual
             scoreElement.innerText = score;
             
-            // Lógica para atualizar e salvar o Recorde (Best Score)
+            // Lógica do Recorde: Compara, Salva e Exibe na hora
             if (score > bestScore) {
                 bestScore = score;
-                localStorage.setItem("2048-best-score", bestScore);
-                bestScoreElement.innerText = bestScore;
-            } else {
-                bestScoreElement.innerText = bestScore;
+                localStorage.setItem("2048_best", bestScore);
             }
+            // Atualiza o elemento visual do Recorde
+            bestScoreElement.innerText = bestScore;
 
             boardElement.innerHTML = "";
             for (let r = 0; r < rows; r++) {
@@ -268,6 +249,8 @@
             }
         }
 
+        // --- LÓGICA DO JOGO (Movimentação) ---
+
         function filterZero(row) { return row.filter(num => num != 0); }
 
         function slide(row) {
@@ -276,7 +259,7 @@
                 if (row[i] == row[i+1]) {
                     row[i] *= 2;
                     row[i+1] = 0;
-                    score += row[i];
+                    score += row[i]; // Incrementa score
                 }
             }
             row = filterZero(row);
@@ -356,9 +339,7 @@
                     }
                 }
             }
-            if (!canMove()) {
-                overlayLoss.style.display = "flex";
-            }
+            if (!canMove()) { overlayLoss.style.display = "flex"; }
         }
 
         function canMove() {
@@ -388,14 +369,13 @@
 
         document.addEventListener('keyup', (e) => handleInput(e.code));
 
+        // Touch para Mobile
         let startX, startY;
         document.addEventListener('touchstart', (e) => {
             startX = e.touches[0].clientX;
             startY = e.touches[0].clientY;
         }, {passive: false});
-
         document.addEventListener('touchmove', (e) => e.preventDefault(), {passive: false});
-
         document.addEventListener('touchend', (e) => {
             let diffX = e.changedTouches[0].clientX - startX;
             let diffY = e.changedTouches[0].clientY - startY;

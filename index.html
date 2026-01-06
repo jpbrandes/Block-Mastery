@@ -12,6 +12,7 @@
             --tile-empty: #cdc1b4;
             --text-dark: #776e65;
             --text-light: #f9f6f2;
+            --accent-color: #8f7a66;
         }
         body {
             background-color: #faf8ef;
@@ -22,17 +23,20 @@
             justify-content: center;
             height: 100vh;
             margin: 0;
-            overflow: hidden; /* Evita que a tela suba e desça no iPhone */
+            overflow: hidden;
+            position: relative; /* Para posicionar as setas */
         }
-        .header { width: 320px; display: flex; justify-content: space-between; align-items: center; }
+        .header { width: 320px; display: flex; justify-content: space-between; align-items: center; z-index: 10; }
         .score-container { background: #bbada0; padding: 5px 15px; border-radius: 3px; color: white; text-align: center; }
+        
         #grid {
             background-color: var(--bg-color);
             width: 300px; height: 300px;
             padding: 10px; border-radius: 6px;
             display: grid; grid-template-columns: repeat(4, 1fr);
             grid-template-rows: repeat(4, 1fr); gap: 10px;
-            touch-action: none; /* Bloqueia o scroll natural para o swipe funcionar */
+            touch-action: none;
+            z-index: 10;
         }
         .tile {
             width: 67.5px; height: 67.5px;
@@ -40,9 +44,8 @@
             border-radius: 3px; display: flex;
             align-items: center; justify-content: center;
             font-size: 24px; font-weight: bold; color: var(--text-dark);
-            transition: transform 0.1s;
+            transition: transform 0.1s, background-color 0.1s;
         }
-        /* Cores dos números */
         .tile-2 { background: #eee4da; }
         .tile-4 { background: #ede0c8; }
         .tile-8 { background: #f2b179; color: white; }
@@ -54,16 +57,42 @@
         .tile-512 { background: #edc850; color: white; font-size: 20px; }
         .tile-1024 { background: #edc53f; color: white; font-size: 16px; }
         .tile-2048 { background: #edc22e; color: white; font-size: 16px; }
-        .btn { background: #8f7a66; color: white; padding: 10px; border: none; border-radius: 3px; cursor: pointer; }
+        
+        .btn { background: #8f7a66; color: white; padding: 10px; border: none; border-radius: 3px; cursor: pointer; margin-top: 15px; z-index: 10;}
+
+        /* Estilo dos Indicadores de Seta */
+        .indicator {
+            position: fixed;
+            font-size: 40px;
+            color: var(--bg-color);
+            opacity: 0;
+            transition: opacity 0.2s, transform 0.2s;
+            pointer-events: none; /* Não atrapalha o toque */
+            z-index: 5;
+        }
+        #ind-up { top: 20px; left: 50%; transform: translateX(-50%) translateY(10px); }
+        #ind-down { bottom: 20px; left: 50%; transform: translateX(-50%) translateY(-10px); }
+        #ind-left { left: 20px; top: 50%; transform: translateY(-50%) translateX(10px); }
+        #ind-right { right: 20px; top: 50%; transform: translateY(-50%) translateX(-10px); }
+
+        .indicator.active {
+            opacity: 0.6;
+            transform: translate(0, 0); /* Efeito suave de movimento */
+        }
     </style>
 </head>
 <body>
+    <div id="ind-up" class="indicator">▲</div>
+    <div id="ind-down" class="indicator">▼</div>
+    <div id="ind-left" class="indicator">◀</div>
+    <div id="ind-right" class="indicator">▶</div>
+
     <div class="header">
         <h1>2048</h1>
         <div class="score-container">Pontos<br><span id="score">0</span></div>
     </div>
     <div id="grid"></div>
-    <p><button class="btn" onclick="resetGame()">Reiniciar Jogo</button></p>
+    <button class="btn" onclick="resetGame()">Reiniciar Jogo</button>
 
     <script>
         let board = [];
@@ -71,8 +100,9 @@
         const gridDisplay = document.getElementById('grid');
         const scoreDisplay = document.getElementById('score');
 
-        // Inicializa a matriz 4x4 vazia (como faria em C)
         function createBoard() {
+            gridDisplay.innerHTML = '';
+            board = [];
             for (let i = 0; i < 16; i++) {
                 let tile = document.createElement('div');
                 tile.classList.add('tile');
@@ -84,7 +114,6 @@
             updateDisplay();
         }
 
-        // Gera um 2 ou 4 em posição aleatória
         function generate() {
             let emptyTiles = board.map((val, idx) => val === 0 ? idx : null).filter(val => val !== null);
             if (emptyTiles.length > 0) {
@@ -102,9 +131,19 @@
             scoreDisplay.innerHTML = score;
         }
 
-        // Lógica de deslizar e somar (similar a manipular arrays em C)
+        // Função para mostrar a seta visual
+        function showIndicator(direction) {
+            const el = document.getElementById('ind-' + direction);
+            el.classList.add('active');
+            setTimeout(() => {
+                el.classList.remove('active');
+            }, 250); // A seta some após 250ms
+        }
+
         function move(direction) {
+            showIndicator(direction); // Ativa o feedback visual
             let hasChanged = false;
+            
             if (direction === 'left' || direction === 'right') {
                 for (let i = 0; i < 4; i++) {
                     let row = [board[i*4], board[i*4+1], board[i*4+2], board[i*4+3]];
@@ -114,7 +153,7 @@
                         board[i*4+j] = newRow[j];
                     }
                 }
-            } else { // Up ou Down
+            } else { 
                 for (let i = 0; i < 4; i++) {
                     let col = [board[i], board[i+4], board[i+8], board[i+12]];
                     let newCol = slide(col, direction === 'down');
@@ -124,6 +163,7 @@
                     }
                 }
             }
+
             if (hasChanged) {
                 generate();
                 updateDisplay();
@@ -145,13 +185,22 @@
             return row;
         }
 
-        // Controles de Touch para iPhone
+        // Eventos de Teclado (Desktop)
+        document.onkeydown = (e) => {
+            if (e.key === 'ArrowLeft') move('left');
+            else if (e.key === 'ArrowRight') move('right');
+            else if (e.key === 'ArrowUp') move('up');
+            else if (e.key === 'ArrowDown') move('down');
+        };
+
+        // Eventos de Toque (Mobile)
         let touchStartX = 0;
         let touchStartY = 0;
         document.addEventListener('touchstart', e => {
             touchStartX = e.touches[0].clientX;
             touchStartY = e.touches[0].clientY;
-        });
+        }, {passive: true});
+
         document.addEventListener('touchend', e => {
             let dx = e.changedTouches[0].clientX - touchStartX;
             let dy = e.changedTouches[0].clientY - touchStartY;
@@ -160,13 +209,11 @@
             } else {
                 if (Math.abs(dy) > 30) move(dy > 0 ? 'down' : 'up');
             }
-        });
+        }, {passive: true});
 
         function resetGame() {
-            board = Array(16).fill(0);
             score = 0;
-            generate(); generate();
-            updateDisplay();
+            createBoard();
         }
 
         createBoard();

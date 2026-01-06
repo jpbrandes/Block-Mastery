@@ -17,12 +17,12 @@
             --empty-cell: #cdc1b4;
             --text-color: #776e65;
             --arrow-color: #8f7a66;
+            --arrow-idle: #bbada0; /* Cor mais suave para quando parada */
         }
 
         * {
             box-sizing: border-box;
-            margin: 0;
-            padding: 0;
+            margin: 0; padding: 0;
             user-select: none;
             -webkit-user-select: none;
             -webkit-tap-highlight-color: transparent;
@@ -32,37 +32,24 @@
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
-            height: 100vh;
-            width: 100vw;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            height: 100vh; width: 100vw;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
             overflow: hidden;
         }
 
         .header-container {
-            width: 320px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            width: 320px; display: flex;
+            justify-content: space-between; align-items: center;
             margin-bottom: 15px;
         }
 
         h1 { font-size: 48px; font-weight: 800; margin: 0; line-height: 1; }
 
-        .scores-container { display: flex; gap: 10px; }
-
         .score-box {
-            background: #bbada0;
-            padding: 8px 12px;
-            border-radius: 6px;
-            text-align: center;
-            color: white;
-            min-width: 80px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
+            background: #bbada0; padding: 8px 12px;
+            border-radius: 6px; text-align: center;
+            color: white; min-width: 80px;
         }
 
         .score-label { font-size: 11px; text-transform: uppercase; color: #eee4da; font-weight: bold; }
@@ -70,74 +57,47 @@
 
         .board-wrapper {
             position: relative;
-            padding: 45px; /* Aumentado para garantir espaço das setas */
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            padding: 40px; 
+            display: flex; justify-content: center; align-items: center;
         }
 
         #game-board {
             position: relative;
             background-color: var(--grid-color);
-            width: 320px;
-            height: 320px;
-            border-radius: 6px;
-            padding: 10px;
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            grid-template-rows: repeat(4, 1fr);
-            gap: 10px;
-            touch-action: none;
-            z-index: 5;
+            width: 320px; height: 320px;
+            border-radius: 6px; padding: 10px;
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(4, 1fr); gap: 10px;
+            touch-action: none; z-index: 5;
         }
 
-        /* --- SISTEMA DE SETAS CORRIGIDO --- */
+        /* --- SETAS REDUZIDAS EM 50% E COM ANIMAÇÃO --- */
         .nav-arrow {
             position: absolute;
-            font-size: 60px; /* Maiores para visibilidade */
-            color: var(--arrow-color);
-            opacity: 0;
-            pointer-events: none;
+            font-size: 30px; /* Reduzido de 60px para 30px */
+            color: var(--arrow-idle);
             z-index: 10;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            display: flex; justify-content: center; align-items: center;
+            transition: color 0.2s;
         }
 
-        /* Posicionamento base usando top/left fixos */
-        .arrow-up    { top: -15px; left: 50%; transform: translateX(-50%); }
-        .arrow-down  { bottom: -15px; left: 50%; transform: translateX(-50%); }
-        .arrow-left  { left: -15px; top: 50%; transform: translateY(-50%); }
-        .arrow-right { right: -15px; top: 50%; transform: translateY(-50%); }
+        .arrow-up    { top: 5px; left: 50%; transform: translateX(-50%); }
+        .arrow-down  { bottom: 5px; left: 50%; transform: translateX(-50%); }
+        .arrow-left  { left: 5px; top: 50%; transform: translateY(-50%); }
+        .arrow-right { right: 5px; top: 50%; transform: translateY(-50%); }
 
-        /* Animações individuais para não resetar o transform de posicionamento */
-        .arrow-up.active-arrow    { animation: anim-up 0.5s ease-out; }
-        .arrow-down.active-arrow  { animation: anim-down 0.5s ease-out; }
-        .arrow-left.active-arrow  { animation: anim-left 0.5s ease-out; }
-        .arrow-right.active-arrow { animation: anim-right 0.5s ease-out; }
+        /* Classes de animação disparadas pelo JavaScript */
+        .active-up    { animation: bounce-up 0.3s ease; color: var(--arrow-color); }
+        .active-down  { animation: bounce-down 0.3s ease; color: var(--arrow-color); }
+        .active-left  { animation: bounce-left 0.3s ease; color: var(--arrow-color); }
+        .active-right { animation: bounce-right 0.3s ease; color: var(--arrow-color); }
 
-        @keyframes anim-up {
-            0% { opacity: 0; top: 0; }
-            50% { opacity: 0.8; top: -35px; }
-            100% { opacity: 0; top: -25px; }
-        }
-        @keyframes anim-down {
-            0% { opacity: 0; bottom: 0; }
-            50% { opacity: 0.8; bottom: -35px; }
-            100% { opacity: 0; bottom: -25px; }
-        }
-        @keyframes anim-left {
-            0% { opacity: 0; left: 0; }
-            50% { opacity: 0.8; left: -35px; }
-            100% { opacity: 0; left: -25px; }
-        }
-        @keyframes anim-right {
-            0% { opacity: 0; right: 0; }
-            50% { opacity: 0.8; right: -35px; }
-            100% { opacity: 0; right: -25px; }
-        }
+        @keyframes bounce-up { 0%, 100% { top: 5px; } 50% { top: -10px; } }
+        @keyframes bounce-down { 0%, 100% { bottom: 5px; } 50% { bottom: -10px; } }
+        @keyframes bounce-left { 0%, 100% { left: 5px; } 50% { left: -10px; } }
+        @keyframes bounce-right { 0%, 100% { right: 5px; } 50% { right: -10px; } }
 
-        /* Grid e Tiles */
+        /* Tiles e Grid */
         .grid-cell { background-color: var(--empty-cell); border-radius: 3px; }
         .tile {
             display: flex; justify-content: center; align-items: center;
@@ -151,9 +111,6 @@
         .t32 { background: #f67c5f; color: #f9f6f2; }
         .t64 { background: #f65e3b; color: #f9f6f2; }
         .t128 { background: #edcf72; color: #f9f6f2; font-size: 30px; }
-        .t256 { background: #edcc61; color: #f9f6f2; font-size: 30px; }
-        .t512 { background: #edc850; color: #f9f6f2; font-size: 30px; }
-        .t1024 { background: #edc53f; color: #f9f6f2; font-size: 24px; }
         .t2048 { background: #edc22e; color: #f9f6f2; font-size: 24px; box-shadow: 0 0 30px 5px rgba(243, 215, 116, 0.4); }
         .tsuper { background: #3c3a32; color: #f9f6f2; font-size: 20px; }
 
@@ -181,14 +138,8 @@
     <div class="header-container">
         <h1>2048</h1>
         <div class="scores-container">
-            <div class="score-box">
-                <span class="score-label">Score</span>
-                <span id="score" class="score-value">0</span>
-            </div>
-            <div class="score-box">
-                <span class="score-label">Best</span>
-                <span id="best-score" class="score-value">0</span>
-            </div>
+            <div class="score-box"><span class="score-label">Score</span><span id="score" class="score-value">0</span></div>
+            <div class="score-box"><span class="score-label">Best</span><span id="best-score" class="score-value">0</span></div>
         </div>
     </div>
 
@@ -252,24 +203,23 @@
                 for (let c = 0; c < columns; c++) {
                     let val = board[r][c];
                     let tile = document.createElement("div");
-                    if (val > 0) {
-                        tile.innerText = val;
-                        tile.className = `tile t${val <= 2048 ? val : 'super'}`;
-                    } else {
-                        tile.className = "grid-cell";
-                    }
+                    tile.className = val > 0 ? `tile t${val <= 2048 ? val : 'super'}` : "grid-cell";
+                    tile.innerText = val > 0 ? val : "";
                     boardElement.appendChild(tile);
                 }
             }
         }
 
         function triggerArrow(dir) {
-            const ids = { 'ArrowUp': 'arrow-up', 'ArrowDown': 'arrow-down', 'ArrowLeft': 'arrow-left', 'ArrowRight': 'arrow-right' };
-            const el = document.getElementById(ids[dir]);
+            const arrowMap = { 'ArrowUp': 'up', 'ArrowDown': 'down', 'ArrowLeft': 'left', 'ArrowRight': 'right' };
+            const suffix = arrowMap[dir];
+            const el = document.getElementById(`arrow-${suffix}`);
             if (el) {
-                el.classList.remove('active-arrow');
-                void el.offsetWidth; // Força reflow para resetar animação
-                el.classList.add('active-arrow');
+                const className = `active-${suffix}`;
+                el.classList.remove(className);
+                void el.offsetWidth; // Force reflow
+                el.classList.add(className);
+                setTimeout(() => el.classList.remove(className), 300);
             }
         }
 
@@ -286,9 +236,7 @@
         }
 
         function handleInput(dir) {
-            let moved = false;
             const prev = JSON.stringify(board);
-
             if (dir === 'ArrowLeft') {
                 for (let r = 0; r < 4; r++) board[r] = slide(board[r]);
             } else if (dir === 'ArrowRight') {
@@ -307,7 +255,6 @@
                 }
             }
 
-            // Ativa a seta sempre que houver tentativa de movimento
             if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(dir)) {
                 triggerArrow(dir);
             }

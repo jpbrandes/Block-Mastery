@@ -55,17 +55,22 @@
             margin: 0;
         }
 
+        .scores-container {
+            display: flex;
+            gap: 5px;
+        }
+
         .score-box {
             background: #bbada0;
-            padding: 5px 20px;
+            padding: 5px 10px;
             border-radius: 6px;
             text-align: center;
             color: white;
-            min-width: 80px;
+            min-width: 70px;
         }
 
-        .score-label { font-size: 11px; text-transform: uppercase; color: #eee4da; }
-        .score-value { font-size: 22px; font-weight: bold; }
+        .score-label { font-size: 10px; text-transform: uppercase; color: #eee4da; font-weight: bold; }
+        .score-value { font-size: 18px; font-weight: bold; }
 
         #game-board {
             position: relative;
@@ -157,6 +162,8 @@
             .tile { font-size: 50px; }
             .t128, .t256, .t512 { font-size: 40px; }
             .t1024, .t2048 { font-size: 32px; }
+            .score-box { min-width: 90px; }
+            .score-value { font-size: 22px; }
         }
     </style>
 </head>
@@ -164,9 +171,15 @@
 
     <div class="header-container">
         <h1>2048</h1>
-        <div class="score-box">
-            <div class="score-label">Score</div>
-            <div class="score-value" id="score">0</div>
+        <div class="scores-container">
+            <div class="score-box">
+                <div class="score-label">Score</div>
+                <div class="score-value" id="score">0</div>
+            </div>
+            <div class="score-box">
+                <div class="score-label">Best</div>
+                <div class="score-value" id="best-score">0</div>
+            </div>
         </div>
     </div>
 
@@ -196,14 +209,19 @@
         const columns = 4;
         let board;
         let score = 0;
+        let bestScore = localStorage.getItem("2048-best-score") || 0;
         let hasWon2048 = false;
 
         const boardElement = document.getElementById("game-board");
         const scoreElement = document.getElementById("score");
+        const bestScoreElement = document.getElementById("best-score");
         const overlayWin = document.getElementById("overlay-win");
         const overlayLoss = document.getElementById("overlay-loss");
 
-        window.onload = restartGame;
+        window.onload = () => {
+            bestScoreElement.innerText = bestScore;
+            restartGame();
+        };
 
         function restartGame() {
             board = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]];
@@ -222,6 +240,14 @@
 
         function updateView() {
             scoreElement.innerText = score;
+            
+            // Atualiza recorde
+            if (score > bestScore) {
+                bestScore = score;
+                localStorage.setItem("2048-best-score", bestScore);
+                bestScoreElement.innerText = bestScore;
+            }
+
             boardElement.innerHTML = "";
             for (let r = 0; r < rows; r++) {
                 for (let c = 0; c < columns; c++) {
@@ -316,7 +342,6 @@
         }
 
         function checkStatus() {
-            // Vitória
             if (!hasWon2048) {
                 for (let r = 0; r < rows; r++) {
                     for (let c = 0; c < columns; c++) {
@@ -328,7 +353,6 @@
                     }
                 }
             }
-            // Derrota
             if (!canMove()) {
                 overlayLoss.style.display = "flex";
             }
